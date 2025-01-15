@@ -44,7 +44,7 @@
             try {
                 const response = await fetch('/temperature');
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error('Error');
                 }
                 const data = await response.text();
                 const currentTemp = data.match(/Current Temperature: ([\d.-]+)/);
@@ -53,10 +53,10 @@
                     const timestamp = new Date().toLocaleString();
                     addTemperatureToTable(tempValue, timestamp);
                 } else {
-                    alert('Не удалось получить данные о температуре.');
+                    alert('Error.');
                 }
             } catch (error) {
-                console.error('Ошибка при получении данных:', error);
+                console.error('Error', error);
             }
         }
 
@@ -69,7 +69,6 @@
 
         document.getElementById('refreshButton').addEventListener('click', fetchTemperature);
 
-        // Автоматическое обновление данных каждые 30 секунд
         setInterval(fetchTemperature, 30000);
     </script>
 </body>
