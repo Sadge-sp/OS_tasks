@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Температурный монитор</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Температурный монитор</h1>
+    <button id="refreshButton">Обновить данные</button>
+    <table id="temperatureTable">
+        <thead>
+            <tr>
+                <th>Температура (°C)</th>
+                <th>Время</th>
+            </tr>
+        </thead>
+        <tbody id="temperatureData">
+            <!-- Данные будут добавлены здесь -->
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchTemperature() {
+            try {
+                const response = await fetch('/temperature');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.text();
+                const currentTemp = data.match(/Current Temperature: ([\d.-]+)/);
+                if (currentTemp) {
+                    const tempValue = currentTemp[1];
+                    const timestamp = new Date().toLocaleString();
+                    addTemperatureToTable(tempValue, timestamp);
+                } else {
+                    alert('Не удалось получить данные о температуре.');
+                }
+            } catch (error) {
+                console.error('Ошибка при получении данных:', error);
+            }
+        }
+
+        function addTemperatureToTable(temp, time) {
+            const tableBody = document.getElementById('temperatureData');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `<td>${temp}</td><td>${time}</td>`;
+            tableBody.appendChild(newRow);
+        }
+
+        document.getElementById('refreshButton').addEventListener('click', fetchTemperature);
+
+        // Автоматическое обновление данных каждые 30 секунд
+        setInterval(fetchTemperature, 30000);
+    </script>
+</body>
+</html>
