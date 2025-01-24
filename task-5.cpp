@@ -27,7 +27,6 @@ using namespace Poco::Net;
 mutex log_mutex;
 sqlite3* db; // Указатель на базу данных
 
-// Функция для логирования температуры в базу данных
 void logTemp(float temp) {
     lock_guard<mutex> lock(log_mutex);
     char* errMsg;
@@ -39,7 +38,6 @@ void logTemp(float temp) {
     }
 }
 
-// Функция для вычисления средней температуры за час
 void hour_average(vector<float>& hourtemp) {
     lock_guard<mutex> lock(log_mutex);
     if (!hourtemp.empty()) {
@@ -59,7 +57,6 @@ void hour_average(vector<float>& hourtemp) {
     }
 }
 
-// Функция для вычисления средней температуры за день
 void Day_average(vector<float>& dailytemp) {
     lock_guard<mutex> lock(log_mutex);
     if (!dailytemp.empty()) {
@@ -79,7 +76,6 @@ void Day_average(vector<float>& dailytemp) {
     }
 }
 
-// Функция для чтения температуры из файла
 float read_detector(const string& filename) {
     ifstream file(filename);
     float temperature;
@@ -88,7 +84,6 @@ float read_detector(const string& filename) {
     return temperature;
 }
 
-// Обработчик HTTP-запросов
 class TemperatureRequestHandler : public HTTPRequestHandler {
 public:
     void handleRequest(HTTPServerRequest& request, HTTPServerResponse& response) override {
@@ -119,22 +114,19 @@ public:
     }
 };
 
-// Фабрика обработчиков HTTP-запросов
-class TemperatureRequestHandlerFactory : public HTTPRequestHandlerFactory {
+class TempReqHandler : public httpRequestHandler {
 public:
     HTTPRequestHandler* createRequestHandler(const HTTPServerRequest& request) override {
         return new TemperatureRequestHandler;
     }
 };
 
-// Функция для запуска сетевого сервера
 void startServer(void*) {
-    ServerSocket svs(8080); // Порт 8080
-    HTTPServer srv(new TemperatureRequestHandlerFactory, svs, new HTTPServerParams);
+    ServerSocket svs(8080);
+    HTTPServer srv(new TempReqHandler, svs, new HTTPServerParams);
     srv.start();
     cout << "Server started on port 8080." << endl;
 
-    // Ожидание завершения работы сервера
     while (true) {
         this_thread::sleep_for(chrono::seconds(1));
     }
@@ -143,13 +135,11 @@ void startServer(void*) {
 }
 
 int main() {
-    // Инициализация базы данных
     sqlite3_open("temperature.db", &db);
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS temperature_logs (id INTEGER PRIMARY KEY, temperature REAL, timestamp TEXT);", nullptr, nullptr, nullptr);
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS hourly_average (id INTEGER PRIMARY KEY, average_temperature REAL, timestamp TEXT);", nullptr, nullptr, nullptr);
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS daily_average (id INTEGER PRIMARY KEY, average_temperature REAL, timestamp TEXT);", nullptr, nullptr, nullptr);
 
-    // Запуск сетевого сервера в отдельном потоке
     Thread serverThread;
     serverThread.start(startServer, nullptr); // Передаем nullptr как аргумент
 
